@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TrustTrack - Risks</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f5f7fa;
+        }
+
+        h1 {
+            color: #1f2937;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 25px;
+            background: white;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #eef2f7;
+        }
+
+        .high {
+            color: red;
+            font-weight: bold;
+        }
+
+        .medium {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .low {
+            color: green;
+            font-weight: bold;
+        }
+
+        #riskForm {
+            display: none;
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        input, select {
+            padding: 10px;
+            margin: 8px;
+            width: 250px;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Risk Register</h1>
+
+    <button onclick="showForm()">+ Add Risk</button>
+
+    <div id="riskForm">
+
+        <h2>Add New Risk</h2>
+
+        <input
+            type="text"
+            id="riskName"
+            placeholder="Risk name"
+        >
+
+        <input
+            type="text"
+            id="category"
+            placeholder="Category"
+        >
+
+        <select id="severity">
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+        </select>
+
+        <button onclick="addRisk()">Add Risk</button>
+
+    </div>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Risk</th>
+                <th>Category</th>
+                <th>Severity</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody id="riskTable">
+
+            {% for risk in risks %}
+
+            <tr>
+
+                <td>{{ risk.name }}</td>
+
+                <td>{{ risk.category }}</td>
+
+                <td class="{{ risk.severity|lower }}">
+                    {{ risk.severity }}
+                </td>
+
+                <td>
+                    <button
+                        class="delete-btn"
+                        onclick="deleteRisk({{ risk.id }})">
+                        Delete
+                    </button>
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+
+    <script>
+
+        function showForm() {
+
+            document.getElementById("riskForm").style.display = "block";
+
+        }
+
+
+        async function addRisk() {
+
+            let risk = document.getElementById("riskName").value;
+            let category = document.getElementById("category").value;
+            let severity = document.getElementById("severity").value;
+
+            if (risk === "" || category === "") {
+
+                alert("Please enter all details");
+
+                return;
+            }
+
+            let response = await fetch("/add-risk", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    name: risk,
+                    category: category,
+                    severity: severity
+
+                })
+
+            });
+
+            let result = await response.json();
+
+            if (result.success) {
+
+                alert("Risk added successfully!");
+
+                location.reload();
+
+            }
+
+        }
+
+
+        function deleteRisk(id) {
+
+            if (!confirm("Are you sure you want to delete this risk?")) {
+
+                return;
+
+            }
+
+            fetch("/delete-risk/" + id, {
+
+                method: "DELETE"
+
+            })
+
+            .then(response => response.json())
+
+            .then(data => {
+
+                if (data.success) {
+
+                    alert("Risk deleted successfully!");
+
+                    location.reload();
+
+                }
+
+            })
+
+            .catch(error => {
+
+                console.error("Error:", error);
+
+                alert("Something went wrong while deleting the risk.");
+
+            });
+
+        }
+
+    </script>
+
+</body>
+</html>
